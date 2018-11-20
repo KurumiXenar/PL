@@ -71,7 +71,7 @@ public class SVM {
 	public static final byte        // opcodes
 	   LOADG   =  0,  STOREG  =  1,
 	   LOADL   =  2,  STOREL  =  3,
-	   LOADC   =  4,
+	   LOADC   =  4,  COPY    =  5,
 	   ADD     =  6,  SUB     =  7,
 	   MUL     =  8,  DIV     =  9,
 	   CMPEQ   = 10,
@@ -85,7 +85,7 @@ public class SVM {
 	private static final String[] mnemonic = {
 	   "LOADG   ",    "STOREG  ",
 	   "LOADL   ",    "STOREL  ",
-	   "LOADC   ",    "???     ",
+	   "LOADC   ",    "COPY     ",
 	   "ADD     ",    "SUB     ",
 	   "MUL     ",    "DIV     ",
 	   "CMPEQ   ",    "???     ",
@@ -318,6 +318,12 @@ public class SVM {
 					fp -= s; 
 					data[fp] = dl;
 					data[fp+1] = ra;
+					break;
+				}
+				//Extension
+				case COPY: {
+					int d = data[sp-1]
+					data[sp++] = d;
 					break;
 				}
 				default: {

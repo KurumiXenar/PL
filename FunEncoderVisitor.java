@@ -259,7 +259,23 @@ public class FunEncoderVisitor extends AbstractParseTreeVisitor<Void> implements
 	 * @return the visitor result
 	 */
 	public Void visitFor(FunParser.ForContext ctx) {
-	    int startaddr = obj.currentOffset();
+	    visit(ctx.e1);
+		String id = ctx.ID().getText();
+		addrTable.put(id, new Address(localvaraddr++, Address.LOCAL));
+		int condaddr = obj.currentOffset();
+		obj.emit1(SVM.COPY);
+		visit(ctx.e2);
+		obj.emit1(SVM.CMPEQ);
+		int jumptrueaddr = obj.currentOffset();
+		obj.emit12(SVM.JUMPT, 0);
+
+		visit(ctx.seq_com());
+
+		obj.emit1(SVM.INC);
+		
+
+
+
 	    return null;
 	}
 
