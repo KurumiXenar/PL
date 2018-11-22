@@ -272,7 +272,10 @@ public class FunEncoderVisitor extends AbstractParseTreeVisitor<Void> implements
 		visit(ctx.seq_com());
 
 		obj.emit1(SVM.INC);
-		
+		obj.emit12(SVM.JUMP, condraddr);
+
+		int exitaddr = obj.currentOffset();
+		pbj.patch12(jumptrueaddr, exitaddr);
 
 
 
