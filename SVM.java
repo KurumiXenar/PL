@@ -71,10 +71,10 @@ public class SVM {
 	public static final byte        // opcodes
 	   LOADG   =  0,  STOREG  =  1,
 	   LOADL   =  2,  STOREL  =  3,
-	   LOADC   =  4,  COPY    =  5,
+	   LOADC   =  4,  COPY    =  5,// EXTENSION
 	   ADD     =  6,  SUB     =  7,
 	   MUL     =  8,  DIV     =  9,
-	   CMPEQ   = 10,
+	   CMPEQ   = 10,  REMOVETOP = 11,// EXTENSION
 	   CMPLT   = 12,  CMPGT   = 13,
 	   INV     = 14,  INC     = 15,
 	   HALT    = 16,  JUMP    = 17,
@@ -85,10 +85,10 @@ public class SVM {
 	private static final String[] mnemonic = {
 	   "LOADG   ",    "STOREG  ",
 	   "LOADL   ",    "STOREL  ",
-	   "LOADC   ",    "COPY     ",
+	   "LOADC   ",    "COPY     ",// EXTENSION
 	   "ADD     ",    "SUB     ",
 	   "MUL     ",    "DIV     ",
-	   "CMPEQ   ",    "???     ",
+	   "CMPEQ   ",    "REMOVETOP     ",// EXTENSION
 	   "CMPLT   ",    "CMPGT   ",
 	   "INV     ",    "INC     ",
 	   "HALT    ",    "JUMP    ",
@@ -320,12 +320,17 @@ public class SVM {
 					data[fp+1] = ra;
 					break;
 				}
-				//Extension
+				//START OF EXTENSION
 				case COPY: {
 					int d = data[sp-1]
 					data[sp++] = d;
 					break;
 				}
+				case REMOVETOP: {
+					sp = sp - 1
+					break;
+				}
+				//END OF EXTENSION
 				default: {
 					out.println("Illegal instruction"
 					   + opcode);
