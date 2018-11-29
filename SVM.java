@@ -322,12 +322,12 @@ public class SVM {
 				}
 				//START OF EXTENSION
 				case COPY: {
-					int d = data[sp-1]
+					int d = data[sp-1];
 					data[sp++] = d;
 					break;
 				}
 				case REMOVETOP: {
-					sp = sp - 1
+					sp = sp - 1;
 					break;
 				}
 				//END OF EXTENSION
