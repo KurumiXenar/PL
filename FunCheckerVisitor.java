@@ -342,13 +342,14 @@ public class FunCheckerVisitor extends AbstractParseTreeVisitor<Type> implements
 	 * @return the visitor result
 	 */
 	public Type visitFor(FunParser.ForContext ctx) {
-		loopCount += 1; 
+		loopCount += 1;
 		define(ctx.ID().getText(), Type.INT, ctx);
 		Type t1 = visit(ctx.e1);
 		Type t2 = visit(ctx.e2);
 		visit(ctx.seq_com());
 		checkType(Type.INT, t1, ctx);
 		checkType(Type.INT, t2, ctx);
+
 		loopCount -=1;
 		return null;
 	}

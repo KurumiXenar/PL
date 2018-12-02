@@ -327,7 +327,7 @@ public class SVM {
 					break;
 				}
 				case REMOVETOP: {
-					sp = sp - 1;
+					int d = data[--sp];
 					break;
 				}
 				//END OF EXTENSION

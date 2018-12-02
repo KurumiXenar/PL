@@ -65,12 +65,12 @@ com
 		  seq_com DOT             # while
 	
 	//Start of Extension
-	|	FOR type ID ASSN e1=expr TO e2=expr COLON
+	|	FOR ID ASSN e1=expr TO e2=expr COLON
 		  seq_com DOT			  #for
 
-	|	BREAK DOT				  #break
+	|	BREAK			  #break
 
-	|	CONTINUE DOT			  #continue
+	|	CONTINUE			  #continue
 	;
 	//End of Extension
 

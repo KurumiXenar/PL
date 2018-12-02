@@ -235,13 +235,14 @@ public class FunEncoderVisitor extends AbstractParseTreeVisitor<Void> implements
 	}
 
 	//START OF EXTENSION
-	Stack<Integer> breakAddr = new Stack<Integer>();
-	Stack<Integer> continueAddr = new Stack<Integer>();
-	int loopCounter = 0;
-	LinkedList<Integer> breakCount = new LinkedList<Integer>();
-	LinkedList<Integer> continueCount = new LinkedList<Integer>();
+	private Stack<Integer> breakAddr = new Stack<Integer>();
+	private Stack<Integer> continueAddr = new Stack<Integer>();
+	private int loopCounter = 0;
+	private LinkedList<Integer> breakCount = new LinkedList<Integer>();
+	private LinkedList<Integer> continueCount = new LinkedList<Integer>();
 
 	/**
+	 * EXTENSION
 	 * Visit a parse tree produced by the {@code while}
 	 * labeled alternative in {@link FunParser#com}.
 	 * @param ctx the parse tree
@@ -279,90 +280,6 @@ public class FunEncoderVisitor extends AbstractParseTreeVisitor<Void> implements
 
 	    return null;
 	}
-
-	/**
-	 * Visit a parse tree produced by the {@code for}
-	 * labeled alternative in {@link FunParser#com}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	public Void visitFor(FunParser.ForContext ctx) {
-		loopCounter = loopCounter + 1;
-		breakCount.addLast(0);
-		continueCount.addLast(0);
-		
-	    visit(ctx.e1);
-		String id = ctx.ID().getText();
-		addrTable.put(id, new Address(localvaraddr++, Address.LOCAL));
-		Address varaddr = addrTable.get(id);
-		int condaddr = obj.currentOffset();
-		obj.emit1(SVM.COPY);
-		visit(ctx.e2);
-		obj.emit1(SVM.CMPEQ);
-		int jumptrueaddr = obj.currentOffset();
-		obj.emit12(SVM.JUMPT, 0);
-
-		visit(ctx.seq_com());
-
-		obj.emit1(SVM.INC);
-		obj.emit1(SVM.COPY);
-		obj.emit12(SVM.STOREL, varaddr.offset);
-		obj.emit12(SVM.JUMP, condaddr);
-
-		for(int i = 0; i < continueCount.getLast(); i++){
-			obj.patch12(continueAddr.pop(), condaddr);
-		}
-		continueCount.removeLast();
-
-		int exitaddr = obj.currentOffset();
-		obj.emit1(SVM.REMOVETOP);
-		pbj.patch12(jumptrueaddr, exitaddr);
-
-		for(int i = 0; i < breakCount.getLast(); i++){
-			obj.patch12(breakAddr.pop(), exitaddr);
-		}
-		breakCount.removeLast();
-
-		loopCounter = loopCounter - 1;
-
-
-	    return null;
-	}
-
-	/**
-	 * Visit a parse tree produced by the {@code break}
-	 * labeled alternative in {@link FunParser#com}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	public Void visitBreak(){
-		int tempCount = breakCount.removeLast();
-		tempCount = tempCount + 1;
-		breakCount.addLast(loopCounter-1, tempCount);
-		
-		breakAddr.push(obj.currentOffset);
-		obj.emit12(SVM.JUMP, 0);
-
-		return null;
-	}
-
-	/**
-	 * Visit a parse tree produced by the {@code continue}
-	 * labeled alternative in {@link FunParser#com}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	public Void visitContinue(){
-		int tempCount = continueCount.removeLast(loopCounter-1);
-		tempCount = tempCount + 1;
-		continueCount.addLast(loopCounter-1, tempCount);
-		
-		continueAddr.push(obj.currentOffset);
-		obj.emit12(SVM.JUMP, 0);
-
-		return null;
-	}
-	//END OF EXTENSION
 
 	/**
 	 * Visit a parse tree produced by the {@code seq}
@@ -529,5 +446,93 @@ public class FunEncoderVisitor extends AbstractParseTreeVisitor<Void> implements
 	    }
 	    return null;
 	}
+
+
+	//START OF EXTENSION
+	/**
+	 * Visit a parse tree produced by the {@code for}
+	 * labeled alternative in {@link FunParser#com}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	public Void visitFor(FunParser.ForContext ctx) {
+		loopCounter = loopCounter + 1;
+		breakCount.addLast(0);
+		continueCount.addLast(0);
+		
+	    visit(ctx.e1);
+		String id = ctx.ID().getText();
+		addrTable.put(id, new Address(localvaraddr++, Address.LOCAL));
+		Address varaddr = addrTable.get(id);
+		int condaddr = obj.currentOffset();
+		obj.emit1(SVM.COPY);
+		visit(ctx.e2);
+		obj.emit1(SVM.CMPGT);
+		int jumptrueaddr = obj.currentOffset();
+		obj.emit12(SVM.JUMPT, 0);
+
+		visit(ctx.seq_com());
+
+		int continuefromaddr = obj.currentOffset();
+		obj.emit1(SVM.INC);
+		obj.emit1(SVM.COPY);
+		obj.emit12(SVM.STOREL, varaddr.offset);
+		obj.emit12(SVM.JUMP, condaddr);
+
+		for(int i = 0; i < continueCount.getLast(); i++){
+			obj.patch12(continueAddr.pop(), continuefromaddr);
+		}
+		continueCount.removeLast();
+
+		int exitaddr = obj.currentOffset();
+		obj.patch12(jumptrueaddr, exitaddr);
+		obj.emit1(SVM.REMOVETOP);
+
+		for(int i = 0; i < breakCount.getLast(); i++){
+			obj.patch12(breakAddr.pop(), exitaddr);
+		}
+		breakCount.removeLast();
+
+		loopCounter = loopCounter - 1;
+		localvaraddr--;
+
+	    return null;
+	}
+
+	/**
+	 * Visit a parse tree produced by the {@code break}
+	 * labeled alternative in {@link FunParser#com}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	public Void visitBreak(FunParser.BreakContext ctx){
+		int tempCount = breakCount.removeLast();
+		tempCount = tempCount + 1;
+		breakCount.addLast(tempCount);
+		
+		breakAddr.push(obj.currentOffset());
+		obj.emit12(SVM.JUMP, 0);
+
+		return null;
+	}
+
+	/**
+	 * Visit a parse tree produced by the {@code continue}
+	 * labeled alternative in {@link FunParser#com}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	public Void visitContinue(FunParser.ContinueContext ctx){
+		int tempCount = continueCount.removeLast();
+		tempCount = tempCount + 1;
+		continueCount.addLast(tempCount);
+		
+		continueAddr.push(obj.currentOffset());
+		obj.emit12(SVM.JUMP, 0);
+
+		return null;
+	}
+	//END OF EXTENSION
+
 
 }
